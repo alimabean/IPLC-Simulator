@@ -297,6 +297,15 @@ void iplc_sim_push_pipeline_stage()
     /* 2. Check for BRANCH and correct/incorrect Branch Prediction */
     if (pipeline[DECODE].itype == BRANCH) {
         int branch_taken = 0;
+        if(pipeline[FETCH].instruction_address != pipeline[DECODE].instruction_address+4){
+            branch_taken = 1;
+            branch_count++;
+        }
+        if(branch_predict_taken==branch_taken){
+            correct_branch_predictions++;
+        }else{
+            pipe_cycles++;
+        }
     }
     
     /* 3. Check for LW delays due to use in ALU stage and if data hit/miss
@@ -311,7 +320,12 @@ void iplc_sim_push_pipeline_stage()
     }
     
     /* 5. Increment pipe_cycles 1 cycle for normal processing */
+    pipe_cycles++;
     /* 6. push stages thru MEM->WB, ALU->MEM, DECODE->ALU, FETCH->ALU */
+    for(int i = 3; i>=0; i--){
+        pipeline[i+1] = pipeline[i];
+    }
+
     
     // 7. This is a give'me -- Reset the FETCH stage to NOP via bezero */
     bzero(&(pipeline[FETCH]), sizeof(pipeline_t));
