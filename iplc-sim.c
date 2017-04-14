@@ -313,10 +313,16 @@ void iplc_sim_push_pipeline_stage()
      */
     if (pipeline[MEM].itype == LW && pipeline[ALU].itype == RTYPE) {
         int inserted_nop = 1;
+        if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
+            pipeline_cycles+=CACHE_MISS_DELAY;
+        }
+        pipeline_cycles++;
     }
     
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
     if (pipeline[MEM].itype == SW) {
+        if(!(iplc_sim_trap_address(pipeline[MEM].stage.sw.data_address)))
+            pipeline_cycles+=10;
     }
     
     /* 5. Increment pipe_cycles 1 cycle for normal processing */
