@@ -304,7 +304,7 @@ void iplc_sim_push_pipeline_stage()
         if(branch_predict_taken==branch_taken){
             correct_branch_predictions++;
         }else{
-            pipe_cycles++;
+            pipeline_cycles++;
         }
     }
     
@@ -326,7 +326,7 @@ void iplc_sim_push_pipeline_stage()
     }
     
     /* 5. Increment pipe_cycles 1 cycle for normal processing */
-    pipe_cycles++;
+    pipeline_cycles++;
     /* 6. push stages thru MEM->WB, ALU->MEM, DECODE->ALU, FETCH->ALU */
     for(int i = 3; i>=0; i--){
         pipeline[i+1] = pipeline[i];
