@@ -39,6 +39,12 @@ void iplc_sim_finalize();
 
 typedef struct cache_line
 {
+    char bit;
+    char* tag;
+
+    void (*line_associativity) (struct cache_line*);
+    void (*replace) (struct cache_line*)
+
     // Your data structures for implementing your cache should include:
     // a valid bit
     // a tag
