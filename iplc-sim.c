@@ -39,8 +39,9 @@ void iplc_sim_finalize();
 
 typedef struct cache_line
 {
-    char bit;
-    char* tag;
+    char valid;
+    unsigned int tag;
+    unsigned long data;
 
     void (*line_associativity) (struct cache_line*);
     void (*replace) (struct cache_line*)
@@ -54,6 +55,7 @@ typedef struct cache_line
 
 cache_line_t *cache=NULL;
 int cache_index=0;
+int cache_set_index=0;
 int cache_blocksize=0;
 int cache_blockoffsetbits = 0;
 int cache_assoc=0;
@@ -169,11 +171,14 @@ void iplc_sim_init(int index, int blocksize, int assoc)
         exit(-1);
     }
     
+    if (assoc==2) cache_set_index = cache_index - 1;
+    if (assoc==4) cache_set_index = cache_index - 2;
+
     cache = (cache_line_t *) malloc((sizeof(cache_line_t) * 1<<index));
     
     // Dynamically create our cache based on the information the user entered
     for (i = 0; i < (1<<index); i++) {
-        cache[i] = (cache_line_t) malloc( sizeof(cache_line_t) );
+        cache[i].valid = 0;
     }
     
     // init the pipeline -- set all data to zero and instructions to NOP
@@ -211,11 +216,30 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
  */
 int iplc_sim_trap_address(unsigned int address)
 {
-    int i=0, index=0;
-    int tag=0;
+    int i=0, assoc_entry;
+    unsigned int tag=0, set_index=0;
     int hit=0;
     
+    //tag size = 30 bits in total memory - cache_set_index bits in the index
+    int tag_size = 30 - cache_set_index;
+
+    set_index = cache_assoc * (address >> tag_size);
+    tag = address & (0xffffffff >> (32 - tag_size));
+
+    for(int i = 0; i < cache_assoc; i++){
+      struct cache_line test_line = cache[set_index+i];
+
+      //test valid bit and tag
+      if(test_line.valid == 1&& test_line.tag == tag){
+        iplc_sim_LRU_update_on_hit(set_index, i);
+        break;
+      }
+    }
+
     // Call the appropriate function for a miss or hit
+    if(hit==0){
+      iplc_sim_LRU_replace_on_miss(set_index, tag);
+    }
 
     /* expects you to return 1 for hit, 0 for miss */
     return hit;
