@@ -232,6 +232,7 @@ int iplc_sim_trap_address(unsigned int address)
       //test valid bit and tag
       if(test_line.valid == 1&& test_line.tag == tag){
         iplc_sim_LRU_update_on_hit(set_index, i);
+        hit = 1;
         break;
       }
     }
@@ -315,6 +316,7 @@ void iplc_sim_push_pipeline_stage()
 {
     int i;
     int data_hit=1;
+
     
     /* 1. Count WRITEBACK stage is "retired" -- This I'm giving you */
     if (pipeline[WRITEBACK].instruction_address) {
@@ -327,9 +329,9 @@ void iplc_sim_push_pipeline_stage()
     /* 2. Check for BRANCH and correct/incorrect Branch Prediction */
     if (pipeline[DECODE].itype == BRANCH) {
         int branch_taken = 0;
-        if(pipeline[FETCH].instruction_address != pipeline[DECODE].instruction_address+4){
+        branch_count++;
+        if(instruction_address != pipeline[DECODE].instruction_address+4){
             branch_taken = 1;
-            branch_count++;
         }
         if(branch_predict_taken==branch_taken){
             correct_branch_predictions++;
@@ -392,6 +394,7 @@ void iplc_sim_process_pipeline_lw(int dest_reg, int base_reg, unsigned int data_
     iplc_sim_push_pipeline_stage();
 
     pipeline[FETCH].itype = LW;
+    pipeline[FETCH].instruction_address = instruction_address;
 
     pipeline[FETCH].stage.lw.dest_reg = dest_reg;
     pipeline[FETCH].stage.lw.base_reg = base_reg;
@@ -405,6 +408,7 @@ void iplc_sim_process_pipeline_sw(int src_reg, int base_reg, unsigned int data_a
     iplc_sim_push_pipeline_stage();
 
     pipeline[FETCH].itype = SW;
+    pipeline[FETCH].instruction_address = instruction_address;
 
     pipeline[FETCH].stage.sw.src_reg = src_reg;
     pipeline[FETCH].stage.sw.base_reg = base_reg;
@@ -416,6 +420,7 @@ void iplc_sim_process_pipeline_branch(int reg1, int reg2)
     /* You must implement this function */
     iplc_sim_push_pipeline_stage();
     pipeline[FETCH].itype = BRANCH;
+    pipeline[FETCH].instruction_address = instruction_address;
 
     pipeline[FETCH].stage.branch.reg1 = reg1;
     pipeline[FETCH].stage.branch.reg2 = reg2;
@@ -427,6 +432,7 @@ void iplc_sim_process_pipeline_jump(char *instruction)
     /* You must implement this function */
     iplc_sim_push_pipeline_stage();
     pipeline[FETCH].itype = JUMP;
+    pipeline[FETCH].instruction_address = instruction_address;
     strcpy(pipeline[FETCH].stage.jump.instruction, instruction);
 
 }
@@ -437,6 +443,7 @@ void iplc_sim_process_pipeline_syscall()
     iplc_sim_push_pipeline_stage();
 
     pipeline[FETCH].itype = SYSCALL;
+    pipeline[FETCH].instruction_address = instruction_address;
 }
 
 void iplc_sim_process_pipeline_nop()
@@ -445,6 +452,7 @@ void iplc_sim_process_pipeline_nop()
     iplc_sim_push_pipeline_stage();
 
     pipeline[FETCH].itype = NOP;
+    pipeline[FETCH].instruction_address = instruction_address;
 }
 
 /************************************************************************************************/
