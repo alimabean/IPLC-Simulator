@@ -175,11 +175,11 @@ void iplc_sim_init(int index, int blocksize, int assoc)
     // Dynamically create our cache based on the information the user entered
     for (i = 0; i < (1<<index); i++) {
 
-        cache[i].valid = (cache_line_t *) malloc((sizeof(char) * assoc));
-        cache[i].tag = (cache_line_t *) malloc((sizeof(unsigned int) * assoc));
-        cache[i].data = (cache_line_t *) malloc((sizeof(unsigned long) * assoc));
+        cache[i].valid = (char *) malloc((sizeof(char) * assoc));
+        cache[i].tag = (unsigned int *) malloc((sizeof(unsigned int) * assoc));
+        cache[i].data = (unsigned long *) malloc((sizeof(unsigned long) * assoc));
 
-        for(j=0, j < assoc; j++){
+        for(j=0; j < assoc; j++){
           cache[i].valid[j] = 0;
         }
     }
@@ -220,25 +220,25 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 int iplc_sim_trap_address(unsigned int address)
 {
     int assoc_entry;
-    unsigned int tag=0, set_index=0;
+    unsigned int tag=0, index=0;
     int hit=0;
     
     //tag size = 30 bits in total memory - index bits in the index
     //tag: least significant bits not in index
-    int tag_size = 30 - index;
+    int tag_size = 30 - cache_index;
     tag = address & (0xffffffff >> (32 - tag_size));
 
     //index: most significant bits not in tag
-    set_index = address >> tag_size;
+    index = address >> tag_size;
 
 
-    struct cache_line test_line = cache[set_index];
+    struct cache_line test_line = cache[index];
 
     for(assoc_entry = 0; assoc_entry < cache_assoc; assoc_entry++){
 
       //test valid bit and tag
-      if(test_line[assoc_entry].valid == 1&& test_line[assoc_entry].tag == tag){
-        iplc_sim_LRU_update_on_hit(set_index, assoc_entry);
+      if(test_line.valid[assoc_entry] == 1&& test_line.tag[assoc_entry] == tag){
+        iplc_sim_LRU_update_on_hit(index, assoc_entry);
         hit = 1;
         break;
       }
@@ -246,7 +246,7 @@ int iplc_sim_trap_address(unsigned int address)
 
     // Call the appropriate function for a miss or hit
     if(hit==0){
-      iplc_sim_LRU_replace_on_miss(set_index, tag);
+      iplc_sim_LRU_replace_on_miss(index, tag);
     }
 
     /* expects you to return 1 for hit, 0 for miss */
