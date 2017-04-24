@@ -41,7 +41,7 @@ typedef struct cache_line
 {
     char* valid;
     unsigned int* tag;
-    unsigned long* data;
+    unsigned long** data;
 
     void (*line_associativity) (struct cache_line*);
     void (*replace) (struct cache_line*)
@@ -177,10 +177,11 @@ void iplc_sim_init(int index, int blocksize, int assoc)
 
         cache[i].valid = (char *) malloc((sizeof(char) * assoc));
         cache[i].tag = (unsigned int *) malloc((sizeof(unsigned int) * assoc));
-        cache[i].data = (unsigned long *) malloc((sizeof(unsigned long) * assoc));
+        cache[i].data = (unsigned long **) malloc((sizeof(unsigned long*) * assoc));
 
         for(j=0; j < assoc; j++){
           cache[i].valid[j] = 0;
+          cache[i].data[j] = (unsigned long *) malloc((sizeof(unsigned long) * blocksize));
         }
     }
     
