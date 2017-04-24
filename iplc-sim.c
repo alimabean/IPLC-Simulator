@@ -39,9 +39,9 @@ void iplc_sim_finalize();
 
 typedef struct cache_line
 {
-    char valid;
-    unsigned int tag;
-    unsigned long data;
+    char* valid;
+    unsigned int* tag;
+    unsigned long* data;
 
     void (*line_associativity) (struct cache_line*);
     void (*replace) (struct cache_line*)
@@ -55,7 +55,6 @@ typedef struct cache_line
 
 cache_line_t *cache=NULL;
 int cache_index=0;
-int cache_set_index=0;
 int cache_blocksize=0;
 int cache_blockoffsetbits = 0;
 int cache_assoc=0;
@@ -171,14 +170,18 @@ void iplc_sim_init(int index, int blocksize, int assoc)
         exit(-1);
     }
     
-    if (assoc==2) cache_set_index = cache_index - 1;
-    if (assoc==4) cache_set_index = cache_index - 2;
-
     cache = (cache_line_t *) malloc((sizeof(cache_line_t) * 1<<index));
     
     // Dynamically create our cache based on the information the user entered
     for (i = 0; i < (1<<index); i++) {
-        cache[i].valid = 0;
+
+        cache[i].valid = (cache_line_t *) malloc((sizeof(char) * assoc));
+        cache[i].tag = (cache_line_t *) malloc((sizeof(unsigned int) * assoc));
+        cache[i].data = (cache_line_t *) malloc((sizeof(unsigned long) * assoc));
+
+        for(j=0, j < assoc; j++){
+          cache[i].valid[j] = 0;
+        }
     }
     
     // init the pipeline -- set all data to zero and instructions to NOP
@@ -216,22 +219,26 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
  */
 int iplc_sim_trap_address(unsigned int address)
 {
-    int i=0, assoc_entry;
+    int assoc_entry;
     unsigned int tag=0, set_index=0;
     int hit=0;
     
-    //tag size = 30 bits in total memory - cache_set_index bits in the index
-    int tag_size = 30 - cache_set_index;
-
-    set_index = cache_assoc * (address >> tag_size);
+    //tag size = 30 bits in total memory - index bits in the index
+    //tag: least significant bits not in index
+    int tag_size = 30 - index;
     tag = address & (0xffffffff >> (32 - tag_size));
 
-    for(int i = 0; i < cache_assoc; i++){
-      struct cache_line test_line = cache[set_index+i];
+    //index: most significant bits not in tag
+    set_index = address >> tag_size;
+
+
+    struct cache_line test_line = cache[set_index];
+
+    for(assoc_entry = 0; assoc_entry < cache_assoc; assoc_entry++){
 
       //test valid bit and tag
-      if(test_line.valid == 1&& test_line.tag == tag){
-        iplc_sim_LRU_update_on_hit(set_index, i);
+      if(test_line[assoc_entry].valid == 1&& test_line[assoc_entry].tag == tag){
+        iplc_sim_LRU_update_on_hit(set_index, assoc_entry);
         hit = 1;
         break;
       }
