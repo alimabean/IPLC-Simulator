@@ -198,7 +198,15 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
-    /* You must implement this function */
+   int i=0, j=0;
+   i = j; // get rid of warning
+    j=cache[index].replacement[cache_assoc-1];//LCU
+   for(i=0;i<cache_assoc-1;i++){//update replacement
+   cache[index].replacement[i+1]=cache[index].replacement[i];
+   }
+    cache[index].replacement[0]=j;//LCU becomes MCU
+    cache[index].assoc[j].tag=tag;//updating tag
+    return;
 
 
 }
@@ -209,7 +217,21 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
-    /* You must implement this function */
+    int i=0, j=0, k=0;
+   i = j; // get rid of warning
+   /* you fill it in */
+   for(k=0;k<cache_assoc;k++){
+   if(assoc==cache[index].replacement[k]){
+   j=cache[index].replacement[k];
+   break;
+   }
+   }
+   for(i=0;i<k;i++){//increment replacement
+   cache[index].replacement[i+1]=cache[index].replacement[i];
+   }
+   cache[index].replacement[0]=j;//hit becomes MCU
+  
+   return;
 }
 
 /*
