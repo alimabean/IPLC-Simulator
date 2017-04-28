@@ -220,6 +220,8 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
     cache[ index ].tag[ replace_index ] = tag;
     cache[ index ].valid[ replace_index ] = 1;
     cache[ index ].lru_val++;
+
+    cache_miss++;
     return;
 
     // int i=0, j=0;
@@ -242,6 +244,19 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
+    for ( int i = 0; i < cache_assoc - 1; i++ )
+    {
+        if ( assoc_entry == cache[ index ].tag[ i ] )
+        {
+            cache[ index ].arry_lru[ i ] = cache[ index ].lru_val;
+            cache[ index ].lru_val++;
+            cache_hit++;
+            return;
+        }
+    }
+
+    
+
    //  int i=0, j=0, k=0;
    //  i = j; // get rid of warning
    //  /* you fill it in */
