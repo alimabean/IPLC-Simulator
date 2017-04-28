@@ -298,9 +298,6 @@ int iplc_sim_trap_address(unsigned int address)
     //index: least significant bits excluding BOB
     index = (address >> cache_blockoffsetbits) & (0xffffffff >> (32 -cache_index));
 
-
-    printf("address: %i tag: %i, index: %i\n", address, tag, index);
-
     struct cache_line test_line = cache[index];
 
     for(assoc_entry = 0; assoc_entry < cache_assoc; assoc_entry++){
