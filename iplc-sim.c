@@ -246,12 +246,15 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
     for ( int i = 0; i < cache_assoc - 1; i++ )
     {
-        if ( assoc_entry == cache[ index ].tag[ i ] )
+        if ( cache[ index ].valid[ i ] == 1 )
         {
-            cache[ index ].arry_lru[ i ] = cache[ index ].lru_val;
-            cache[ index ].lru_val++;
-            cache_hit++;
-            return;
+            if ( assoc_entry == cache[ index ].tag[ i ] )
+            {
+                cache[ index ].arry_lru[ i ] = cache[ index ].lru_val;
+                cache[ index ].lru_val++;
+                cache_hit++;
+                return;
+            }
         }
     }
 
