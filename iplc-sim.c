@@ -43,8 +43,13 @@ typedef struct cache_line
     unsigned int* tag;
     unsigned long** data;
 
-    void (*line_associativity) (struct cache_line*);
-    void (*replace) (struct cache_line*)
+
+    int lru_val;
+    int * arry_lru;
+    // int * replacement;
+
+    // void (*line_associativity) (struct cache_line*);
+    // void (*replace) (struct cache_line*)
 
     // Your data structures for implementing your cache should include:
     // a valid bit
@@ -175,6 +180,8 @@ void iplc_sim_init(int index, int blocksize, int assoc)
     // Dynamically create our cache based on the information the user entered
     for (i = 0; i < (1<<index); i++) {
 
+        cache[i].lru_val = 0;
+        cache[i].arry_lru = ( int * ) calloc( sizeof( int ), assoc );
         cache[i].valid = (char *) malloc((sizeof(char) * assoc));
         cache[i].tag = (unsigned int *) malloc((sizeof(unsigned int) * assoc));
         cache[i].data = (unsigned long **) malloc((sizeof(unsigned long*) * assoc));
@@ -198,15 +205,33 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
-   int i=0, j=0;
-   i = j; // get rid of warning
-    j=cache[index].replacement[cache_assoc-1];//LCU
-   for(i=0;i<cache_assoc-1;i++){//update replacement
-   cache[index].replacement[i+1]=cache[index].replacement[i];
-   }
-    cache[index].replacement[0]=j;//LCU becomes MCU
-    cache[index].assoc[j].tag=tag;//updating tag
+    int replace_index = 0;
+    int lowest_lru = cache[ index ].arry_lru[ 0 ];
+
+    for ( int i = 1; i < cache_assoc - 1; i++ )
+    {
+        if ( cache[ index ].valid[ i ] == 0 && lowest_lru > cache[ index ].arry_lru[ i ] )
+        {
+            lowest_lru = cache[ index ].arry_lru[ i ];
+            replace_index = i;
+        }
+    }
+    cache[ index ].arry_lru[ replace_index ] = cache[ index ].lru;
+    cache[ index ].tag[ replace_index ] = tag;
+    cache[ index ].valid[ replace_index ] = 1;
+    cache[ index ].lru_val++;
     return;
+
+    // int i=0, j=0;
+    // i = j; // get rid of warning
+    // j=cache[index].replacement[cache_assoc-1];//LCU
+    // for( i=0;i<cache_assoc-1;i++ )
+    // {//update replacement
+    //     cache[index].replacement[i+1]=cache[index].replacement[i];
+    // }
+    // cache[index].replacement[0]=j;//LCU becomes MCU
+    // cache[index].assoc[j].tag=tag;//updating tag
+    // return;
 
 
 }
@@ -217,21 +242,23 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
-    int i=0, j=0, k=0;
-   i = j; // get rid of warning
-   /* you fill it in */
-   for(k=0;k<cache_assoc;k++){
-   if(assoc==cache[index].replacement[k]){
-   j=cache[index].replacement[k];
-   break;
-   }
-   }
-   for(i=0;i<k;i++){//increment replacement
-   cache[index].replacement[i+1]=cache[index].replacement[i];
-   }
-   cache[index].replacement[0]=j;//hit becomes MCU
+   //  int i=0, j=0, k=0;
+   //  i = j; // get rid of warning
+   //  /* you fill it in */
+   //  for( k=0; k<cache_assoc; k++ )
+   //  {
+   //      if( assoc_entry == cache[index].replacement[k] ){
+   //          j = cache[index].replacement[k];
+   //          break;
+   //      }
+   //  }
+   //  for( i=0; i<k; i++ )
+   //  {//increment replacement
+   //      cache[ index ].replacement[ i+1 ] = cache[ index ].replacement[ i ];
+   //  }
+   //  cache[ index ].replacement[ 0 ]=j;//hit becomes MCU
   
-   return;
+   // return;
 }
 
 /*
