@@ -292,14 +292,14 @@ int iplc_sim_trap_address(unsigned int address)
     unsigned int tag=0, index=0;
     int hit=0;
     
-    //tag size = 30 bits in total memory - index bits in the index
-    //tag: least significant bits not in index
-    int tag_size = 30 - cache_index;
-    tag = address & (0xffffffff >> (32 - tag_size));
+    //tag: most significant bits until BOB and index
+    tag = address >> cache_index >> cache_blockoffsetbits;
 
-    //index: most significant bits not in tag
-    index = address >> tag_size;
+    //index: least significant bits excluding BOB
+    index = (address >> cache_blockoffsetbits) & (0xffffffff >> (32 -cache_index));
 
+
+    printf("address: %i tag: %i, index: %i\n", address, tag, index);
 
     struct cache_line test_line = cache[index];
 
