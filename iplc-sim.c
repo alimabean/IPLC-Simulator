@@ -216,7 +216,7 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
             replace_index = i;
         }
     }
-    cache[ index ].arry_lru[ replace_index ] = cache[ index ].lru;
+    cache[ index ].arry_lru[ replace_index ] = cache[ index ].lru_val;
     cache[ index ].tag[ replace_index ] = tag;
     cache[ index ].valid[ replace_index ] = 1;
     cache[ index ].lru_val++;
