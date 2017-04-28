@@ -181,13 +181,14 @@ void iplc_sim_init(int index, int blocksize, int assoc)
     for (i = 0; i < (1<<index); i++) {
 
         cache[i].lru_val = 0;
-        cache[i].arry_lru = ( int * ) calloc( sizeof( int ), assoc );
+        cache[i].arry_lru = ( int * ) malloc( sizeof( int ) * assoc );
         cache[i].valid = (char *) malloc((sizeof(char) * assoc));
         cache[i].tag = (unsigned int *) malloc((sizeof(unsigned int) * assoc));
         cache[i].data = (unsigned long **) malloc((sizeof(unsigned long*) * assoc));
 
         for(j=0; j < assoc; j++){
           cache[i].valid[j] = 0;
+          cache[ i ].arry_lru[ j ] = -1;
           cache[i].data[j] = (unsigned long *) malloc((sizeof(unsigned long) * blocksize));
         }
     }
@@ -210,7 +211,7 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
 
     for ( int i = 1; i < cache_assoc - 1; i++ )
     {
-        if ( cache[ index ].valid[ i ] == 0 && lowest_lru > cache[ index ].arry_lru[ i ] )
+        if ( lowest_lru > cache[ index ].arry_lru[ i ] )
         {
             lowest_lru = cache[ index ].arry_lru[ i ];
             replace_index = i;
