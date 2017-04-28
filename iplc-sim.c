@@ -211,6 +211,11 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
 
     for ( int i = 1; i < cache_assoc - 1; i++ )
     {
+        if ( cache[ index ].valid[ i ] == 0 )
+        {
+            replace_index = i;
+            break;
+        }
         if ( lowest_lru > cache[ index ].arry_lru[ i ] )
         {
             lowest_lru = cache[ index ].arry_lru[ i ];
@@ -258,8 +263,7 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
             }
         }
     }
-
-    
+    return;
 
    //  int i=0, j=0, k=0;
    //  i = j; // get rid of warning
