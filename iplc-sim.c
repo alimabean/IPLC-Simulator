@@ -80,7 +80,7 @@ unsigned int branch_count=0;
 unsigned int correct_branch_predictions=0;
 
 unsigned int debug=0;
-unsigned int dump_pipeline=1;
+unsigned int dump_pipeline=0;
 
 enum instruction_type {NOP, RTYPE, LW, SW, BRANCH, JUMP, JAL, SYSCALL};
 
@@ -424,25 +424,48 @@ void iplc_sim_push_pipeline_stage()
     if (pipeline[DECODE].itype == BRANCH) {
         int branch_taken = 0;
         branch_count++;
-        if(instruction_address != pipeline[DECODE].instruction_address+4){
+        if(pipeline[FETCH].instruction_address != pipeline[DECODE].instruction_address+4){
             branch_taken = 1;
         }
-        if(branch_predict_taken==branch_taken){
-            correct_branch_predictions++;
-        }else{
+        // if(branch_predict_taken==branch_taken){
+        //     correct_branch_predictions++;
+        // }else{
+        //     pipeline_cycles++;
+        // }
+        if( branch_taken != branch_predict_taken )
+        {
             pipeline_cycles++;
+            memcpy( &pipeline[WRITEBACK], &pipeline[MEM], sizeof(pipeline_t) );
+            memcpy( &pipeline[MEM], &pipeline[ALU], sizeof(pipeline_t) );
+            memcpy( &pipeline[ALU], &pipeline[DECODE], sizeof(pipeline_t) );
+            
+            /* insert NOP do to branch miss prediction */
+            // pipeline[DECODE].itype = NOP;
+            // pipeline[DECODE].instruction_address = 0;
+            bzero( &(pipeline[DECODE]), sizeof(pipeline_t) );
+            
+            if( pipeline[WRITEBACK].instruction_address )
+            {
+                instruction_count++;
+                if( debug )
+                    printf("DEBUG: Retired Instruction at 0x%x, Type %d, at Time %u \n",
+                           pipeline[WRITEBACK].instruction_address, pipeline[WRITEBACK].itype, pipeline_cycles );
+            }
         }
+        else
+            correct_branch_predictions++;
     }
     
     /* 3. Check for LW delays due to use in ALU stage and if data hit/miss
      *    add delay cycles if needed.
      */
-    if (pipeline[MEM].itype == LW && pipeline[ALU].itype == RTYPE) {
+    if (pipeline[MEM].itype == LW) {
         int inserted_nop = 1;
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
             pipeline_cycles+=CACHE_MISS_DELAY;
         }
-        pipeline_cycles++;
+        if(pipeline[ALU].itype == RTYPE)
+            pipeline_cycles++;
     }
     
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
@@ -450,12 +473,14 @@ void iplc_sim_push_pipeline_stage()
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.sw.data_address)))
             pipeline_cycles+=10;
     }
+
     
     /* 5. Increment pipe_cycles 1 cycle for normal processing */
     pipeline_cycles++;
     /* 6. push stages thru MEM->WB, ALU->MEM, DECODE->ALU, FETCH->ALU */
     for(int i = 3; i>=0; i--){
         pipeline[i+1] = pipeline[i];
+        //memcpy( &pipeline[i+1], &pipeline[i], sizeof(pipeline_t) );
     }
 
     
