@@ -229,6 +229,9 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
 
     cache_miss++;
     return;
+ 
+    
+ 
 
     // int i=0, j=0;
     // i = j; // get rid of warning
@@ -264,6 +267,18 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
         }
     }
     return;
+ 
+   ////int i=0, j=0;
+
+   // for (j = 0; j < cache_assoc; j++)
+   //     if (cache[index].tag[j] == assoc_entry)
+   //         break;
+    /* percolate everything up */
+   // for (i = j+1; i < cache_assoc; i++) {
+   //     cache[index].tag[i-1] = cache[index].tag[i];
+   // }
+   // cache[index].tag[cache_assoc-1] = assoc_entry;
+  
 
    //  int i=0, j=0, k=0;
    //  i = j; // get rid of warning
