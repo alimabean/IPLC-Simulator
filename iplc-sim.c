@@ -210,7 +210,7 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
     int replace_index = 0;
     int lowest_lru = cache[ index ].arry_lru[ 0 ];
 
-    for ( int i = 0; i < cache_assoc - 1; i++ )
+    for ( int i = 0; i < cache_assoc; i++ )
     {
         if ( cache[ index ].valid[ i ] == 0 )
         {
