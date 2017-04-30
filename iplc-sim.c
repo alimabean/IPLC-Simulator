@@ -206,10 +206,11 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
+    cache_access++;
     int replace_index = 0;
     int lowest_lru = cache[ index ].arry_lru[ 0 ];
 
-    for ( int i = 1; i < cache_assoc - 1; i++ )
+    for ( int i = 0; i < cache_assoc - 1; i++ )
     {
         if ( cache[ index ].valid[ i ] == 0 )
         {
@@ -253,6 +254,7 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
+    cache_access++;
     for ( int i = 0; i < cache_assoc - 1; i++ )
     {
         if ( cache[ index ].valid[ i ] == 1 )
