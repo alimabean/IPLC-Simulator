@@ -43,13 +43,8 @@ typedef struct cache_line
     unsigned int* tag;
     unsigned long** data;
 
-
     int lru_val;
     int * arry_lru;
-    // int * replacement;
-
-    // void (*line_associativity) (struct cache_line*);
-    // void (*replace) (struct cache_line*)
 
     // Your data structures for implementing your cache should include:
     // a valid bit
@@ -230,20 +225,6 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
 
     cache_miss++;
     return;
- 
-    
-    // int i=0, j=0;
-    // i = j; // get rid of warning
-    // j=cache[index].tag[cache_assoc-1];//LCU
-    // for( i=0;i<cache_assoc-1;i++ )
-    // {//update replacement
-    //     cache[index].tag[i+1]=cache[index].tag[i];
-    // }
-    // cache[index].tag[0]=j;//LCU becomes MCU
-    // cache[index].assoc[j].tag=tag;//updating tag
-    // return;
-
-
 }
 
 /*
@@ -256,50 +237,7 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
     cache_hit++;
     cache[ index ].arry_lru[ assoc_entry ] = cache[ index ].lru_val;
     cache[ index ].lru_val++;
-    // for ( int i = 0; i < cache_assoc - 1; i++ )
-    // {
-    //     // if ( cache[ index ].valid[ i ] == 1 )
-    //     // {
-    //         if ( assoc_entry == cache[ index ].tag[ i ] )
-    //         {
-    //             cache[ index ].arry_lru[ i ] = cache[ index ].lru_val;
-    //             cache[ index ].lru_val++;
-    //             // cache_hit++;
-    //             return;
-    //         }
-    //     // }
-    // }
     return;
- 
-   ////int i=0, j=0;
-
-   // for (j = 0; j < cache_assoc; j++)
-   //     if (cache[index].tag[j] == assoc_entry)
-   //         break;
-    /* percolate everything up */
-   // for (i = j+1; i < cache_assoc; i++) {
-   //     cache[index].tag[i-1] = cache[index].tag[i];
-   // }
-   // cache[index].tag[cache_assoc-1] = assoc_entry;
-  
-
-   //  int i=0, j=0, k=0;
-   //  i = j; // get rid of warning
-   //  /* you fill it in */
-   //  for( k=0; k<cache_assoc; k++ )
-   //  {
-   //      if( assoc_entry == cache[index].tag[k] ){
-   //          j = cache[index].replacement[k];
-   //          break;
-   //      }
-   //  }
-   //  for( i=0; i<k; i++ )
-   //  {//increment replacement
-   //      cache[ index ].tag[ i+1 ] = cache[ index ].tag[ i ];
-   //  }
-   //  cache[ index ].tag[ 0 ]=j;//hit becomes MCU
-  
-   // return;
 }
 
 /*
@@ -461,18 +399,25 @@ void iplc_sim_push_pipeline_stage()
      *    add delay cycles if needed.
      */
     if (pipeline[MEM].itype == LW) {
-        int inserted_nop = 1;
+        // int inserted_nop = 1;
+        // if ( pipeline[DECODE].itype == RTYPE && (pipeline[DECODE].stage.rtype.reg1 != pipeline[MEM].stage.lw.dest_reg && pipeline[DECODE].stage.rtype.reg2_or_constant != pipeline[MEM].stage.lw.dest_reg ) )
+        //     pipeline_cycles++;
+
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
-            pipeline_cycles+=CACHE_MISS_DELAY;
+            pipeline_cycles+=9;
         }
-        if(pipeline[ALU].itype == RTYPE)
-            pipeline_cycles++;
     }
+
+    // if (pipeline[ALU].itype == LW)
+    // {
+    //     if ( pipeline[DECODE].itype == RTYPE && (pipeline[DECODE].stage.rtype.reg1 != pipeline[ALU].stage.lw.dest_reg && pipeline[DECODE].stage.rtype.reg2_or_constant != pipeline[ALU].stage.lw.dest_reg ) )
+    //         pipeline_cycles++;
+    // }
     
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
     if (pipeline[MEM].itype == SW) {
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.sw.data_address)))
-            pipeline_cycles+=10;
+            pipeline_cycles+=9;
     }
 
     
