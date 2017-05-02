@@ -404,10 +404,11 @@ void iplc_sim_push_pipeline_stage()
         //     pipeline_cycles++;
 
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
-            pipeline_cycles+=9;
+            // Since we are incrementing this cycle as well, only add 9
+            pipeline_cycles+=CACHE_MISS_DELAY - 1;
         }
     }
-
+    /* Attempt at forwarding logic */
     // if (pipeline[ALU].itype == LW)
     // {
     //     if ( pipeline[DECODE].itype == RTYPE && (pipeline[DECODE].stage.rtype.reg1 != pipeline[ALU].stage.lw.dest_reg && pipeline[DECODE].stage.rtype.reg2_or_constant != pipeline[ALU].stage.lw.dest_reg ) )
@@ -417,7 +418,7 @@ void iplc_sim_push_pipeline_stage()
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
     if (pipeline[MEM].itype == SW) {
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.sw.data_address)))
-            pipeline_cycles+=9;
+            pipeline_cycles+=CACHE_MISS_DELAY - 1;
     }
 
     
