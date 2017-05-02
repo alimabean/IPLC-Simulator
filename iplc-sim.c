@@ -43,7 +43,9 @@ typedef struct cache_line
     unsigned int* tag;
     unsigned long** data;
 
+    // keep track of the last lru value the cache assigned 
     int lru_val;
+    // keep track of the LRU values in this cache line
     int * arry_lru;
 
     // Your data structures for implementing your cache should include:
@@ -201,30 +203,33 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
-    cache_access++;
     int replace_index = 0;
     int lowest_lru = cache[ index ].arry_lru[ 0 ];
 
+    // Loop to find the lowest LRU value
     for ( int i = 0; i < cache_assoc; i++ )
-    {
+    {   
+        // If the current index is empty break and assign the value to this index
         if ( cache[ index ].valid[ i ] == 0 )
-        {
+        {   
             replace_index = i;
             break;
         }
+        // Otherwise find the lowest LRU value in the set
         if ( lowest_lru > cache[ index ].arry_lru[ i ] )
         {
             lowest_lru = cache[ index ].arry_lru[ i ];
             replace_index = i;
         }
     }
+    // Add the data address to the set
     cache[ index ].arry_lru[ replace_index ] = cache[ index ].lru_val;
     cache[ index ].tag[ replace_index ] = tag;
     cache[ index ].valid[ replace_index ] = 1;
     cache[ index ].lru_val++;
 
     cache_miss++;
-    return;
+    // return;
 }
 
 /*
@@ -232,8 +237,8 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  * information in the cache.
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
-{
-    cache_access++;
+{   
+    // Increment the values and set the LRU value to the latest value
     cache_hit++;
     cache[ index ].arry_lru[ assoc_entry ] = cache[ index ].lru_val;
     cache[ index ].lru_val++;
@@ -247,7 +252,9 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
  * desired index.  In that case we will also need to call the LRU functions.
  */
 int iplc_sim_trap_address(unsigned int address)
-{
+{   
+    cache_access++;
+
     int assoc_entry;
     unsigned int tag=0, index=0;
     int hit=0;
@@ -347,11 +354,6 @@ void iplc_sim_dump_pipeline()
  */
 void iplc_sim_push_pipeline_stage()
 {
-    int i;
-    int data_hit=1;
-    // int inserted_nop = 0;
-
-    
     /* 1. Count WRITEBACK stage is "retired" -- This I'm giving you */
     if (pipeline[WRITEBACK].instruction_address) {
         instruction_count++;
@@ -364,13 +366,15 @@ void iplc_sim_push_pipeline_stage()
     if (pipeline[DECODE].itype == BRANCH) {
         int branch_taken = 0;
         branch_count++;
-
+        // If there is a valid address in the FETCH stage, check if it branches
         if ( pipeline[FETCH].instruction_address )
         {
+            // If PC+4 is not equal to the current address, a branch was taken
             if(pipeline[FETCH].instruction_address!=pipeline[DECODE].instruction_address+4){
             branch_taken = 1;
             }
-
+            // If branch taken does not coincide with our selection, increase pipeline_c
+            // and push the stages through the pipeline
             if( branch_taken != branch_predict_taken )
             {
                 pipeline_cycles++;
@@ -379,8 +383,6 @@ void iplc_sim_push_pipeline_stage()
                 memcpy( &pipeline[ALU], &pipeline[DECODE], sizeof(pipeline_t) );
                 
                 /* insert NOP do to branch miss prediction */
-                // pipeline[DECODE].itype = NOP;
-                // pipeline[DECODE].instruction_address = 0;
                 bzero( &(pipeline[DECODE]), sizeof(pipeline_t) );
                 
                 if( pipeline[WRITEBACK].instruction_address )
@@ -401,6 +403,7 @@ void iplc_sim_push_pipeline_stage()
      */
     if (pipeline[MEM].itype == LW) {
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
+                // Increment cycles by 9 not 10: since we are incrementing the value later in the pipeline
                 pipeline_cycles+=CACHE_MISS_DELAY - 1;
         }
     }
@@ -408,19 +411,17 @@ void iplc_sim_push_pipeline_stage()
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
     if (pipeline[MEM].itype == SW) {
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.sw.data_address)))
-            pipeline_cycles+=CACHE_MISS_DELAY-1;
+            // Increment cycles by 9 not 10: since we are incrementing the value later in the pipeline
+            pipeline_cycles+=CACHE_MISS_DELAY - 1;
     }
 
-    
     /* 5. Increment pipe_cycles 1 cycle for normal processing */
     pipeline_cycles++;
     /* 6. push stages thru MEM->WB, ALU->MEM, DECODE->ALU, FETCH->ALU */
     for(int i = 3; i>=0; i--){
         pipeline[i+1] = pipeline[i];
-        //memcpy( &pipeline[i+1], &pipeline[i], sizeof(pipeline_t) );
     }
 
-    
     // 7. This is a give'me -- Reset the FETCH stage to NOP via bezero */
     bzero(&(pipeline[FETCH]), sizeof(pipeline_t));
 }
