@@ -370,14 +370,7 @@ void iplc_sim_push_pipeline_stage()
             if(pipeline[FETCH].instruction_address!=pipeline[DECODE].instruction_address+4){
             branch_taken = 1;
             }
-        
-            // if ( pipeline[DECODE].instruction_address != pipeline[ALU].instruction_address+4 ){
-            
-            // if(branch_predict_taken==branch_taken){
-            //     correct_branch_predictions++;
-            // }else{
-            //     pipeline_cycles++;
-            // }
+
             if( branch_taken != branch_predict_taken )
             {
                 pipeline_cycles++;
@@ -407,37 +400,10 @@ void iplc_sim_push_pipeline_stage()
      *    add delay cycles if needed.
      */
     if (pipeline[MEM].itype == LW) {
-        int inserted_nop = 0;
-        if ( pipeline[DECODE].itype == RTYPE && ((pipeline[ALU].stage.rtype.reg1 == pipeline[MEM].stage.lw.dest_reg )||( pipeline[ALU].stage.rtype.reg2_or_constant == pipeline[MEM].stage.lw.dest_reg ) ) )
-        {
-            pipeline_cycles++;
-            memcpy( &pipeline[WRITEBACK], &pipeline[MEM], sizeof(pipeline_t) );
-            bzero( &(pipeline[MEM]), sizeof(pipeline_t) );
-            inserted_nop = 1;
-
-            if( pipeline[WRITEBACK].instruction_address )
-            {
-                instruction_count++;
-                if( debug )
-                    printf("DEBUG: Retired Instruction at 0x%x, Type %d, at Time %u \n",
-                           pipeline[WRITEBACK].instruction_address, pipeline[WRITEBACK].itype, pipeline_cycles );
-            }
-        }
-
         if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
-            // Since we are incrementing this cycle as well, only add 9
-            if (inserted_nop == 1)
-                pipeline_cycles+=CACHE_MISS_DELAY - 2;
-            else
                 pipeline_cycles+=CACHE_MISS_DELAY - 1;
         }
     }
-    /* Attempt at forwarding logic */
-    // if (pipeline[ALU].itype == LW)
-    // {
-    //     if ( pipeline[DECODE].itype == RTYPE && (pipeline[DECODE].stage.rtype.reg1 != pipeline[ALU].stage.lw.dest_reg && pipeline[DECODE].stage.rtype.reg2_or_constant != pipeline[ALU].stage.lw.dest_reg ) )
-    //         pipeline_cycles++;
-    // }
     
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
     if (pipeline[MEM].itype == SW) {
