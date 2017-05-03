@@ -366,7 +366,7 @@ void iplc_sim_push_pipeline_stage()
     if (pipeline[DECODE].itype == BRANCH) {
         int branch_taken = 0;
         branch_count++;
-        // If there is a valid address in the FETCH stage, check if it branches
+        // If there is a valid address in the FETCH stage, proceed with branch check
         if ( pipeline[FETCH].instruction_address )
         {
             // If PC+4 is not equal to the current address, a branch was taken
@@ -448,8 +448,11 @@ void iplc_sim_process_pipeline_lw(int dest_reg, int base_reg, unsigned int data_
 {   
 
     /* You must implement this function */
+
+    // Push the stages through the pipeline
     iplc_sim_push_pipeline_stage();
 
+    // Load the corresponding values into the FETCH stage
     pipeline[FETCH].itype = LW;
     pipeline[FETCH].instruction_address = instruction_address;
 
@@ -462,8 +465,11 @@ void iplc_sim_process_pipeline_lw(int dest_reg, int base_reg, unsigned int data_
 void iplc_sim_process_pipeline_sw(int src_reg, int base_reg, unsigned int data_address)
 {
     /* You must implement this function */
+
+    // Push the stages through the pipeline
     iplc_sim_push_pipeline_stage();
 
+    // Assign the corresponding values to the FETCH stage
     pipeline[FETCH].itype = SW;
     pipeline[FETCH].instruction_address = instruction_address;
 
@@ -475,7 +481,11 @@ void iplc_sim_process_pipeline_sw(int src_reg, int base_reg, unsigned int data_a
 void iplc_sim_process_pipeline_branch(int reg1, int reg2)
 {
     /* You must implement this function */
+
+    // Push the stages through the pipeline
     iplc_sim_push_pipeline_stage();
+
+    // Assign the corresponding values to the FETCH stage
     pipeline[FETCH].itype = BRANCH;
     pipeline[FETCH].instruction_address = instruction_address;
 
@@ -487,7 +497,11 @@ void iplc_sim_process_pipeline_branch(int reg1, int reg2)
 void iplc_sim_process_pipeline_jump(char *instruction)
 {
     /* You must implement this function */
+
+    // Push the stages through the pipeline
     iplc_sim_push_pipeline_stage();
+
+    // Assign the corresponding values to the FETCH stage
     pipeline[FETCH].itype = JUMP;
     pipeline[FETCH].instruction_address = instruction_address;
     strcpy(pipeline[FETCH].stage.jump.instruction, instruction);
@@ -497,8 +511,11 @@ void iplc_sim_process_pipeline_jump(char *instruction)
 void iplc_sim_process_pipeline_syscall()
 {
     /* You must implement this function */
+
+    // Push the stages through the pipeline
     iplc_sim_push_pipeline_stage();
 
+    // Assign the corresponding values to the FETCH stage
     pipeline[FETCH].itype = SYSCALL;
     pipeline[FETCH].instruction_address = instruction_address;
 }
@@ -506,8 +523,11 @@ void iplc_sim_process_pipeline_syscall()
 void iplc_sim_process_pipeline_nop()
 {
     /* You must implement this function */
+
+    // Push the stages through the pipeline
     iplc_sim_push_pipeline_stage();
 
+    // Assign the corresponding values to the FETCH stage
     pipeline[FETCH].itype = NOP;
     pipeline[FETCH].instruction_address = instruction_address;
 }
