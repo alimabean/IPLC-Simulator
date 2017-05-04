@@ -353,7 +353,7 @@ void iplc_sim_dump_pipeline()
  * Then push the contents of our various pipeline stages through the pipeline.
  */
 void iplc_sim_push_pipeline_stage()
-{
+{   
     /* 1. Count WRITEBACK stage is "retired" -- This I'm giving you */
     if (pipeline[WRITEBACK].instruction_address) {
         instruction_count++;
@@ -402,10 +402,28 @@ void iplc_sim_push_pipeline_stage()
      *    add delay cycles if needed.
      */
     if (pipeline[MEM].itype == LW) {
-        if(!(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address))){
-                // Increment cycles by 9 not 10: since we are incrementing the value later in the pipeline
-                pipeline_cycles+=CACHE_MISS_DELAY - 1;
+        // For whatever reason I cannot use the same logic to test if this is a cache miss without messing the 
+        // Total cycles: on sample run it produces 91205 cycles
+        int hit = iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address);
+        int nop = 0;
+        if (pipeline[ALU].itype == RTYPE)
+        {
+            if ((pipeline[ALU].stage.rtype.reg1 == pipeline[MEM].stage.lw.dest_reg) || (pipeline[ALU].stage.rtype.reg2_or_constant == pipeline[MEM].stage.lw.dest_reg))
+            {
+                pipeline_cycles++;
+                memcpy( &pipeline[WRITEBACK], &pipeline[MEM], sizeof(pipeline_t) );
+                bzero( &(pipeline[MEM]), sizeof(pipeline_t) );
+                nop = 1;
+
+                if(pipeline[WRITEBACK].instruction_address)
+                    instruction_count++;
+            }
         }
+        if(hit == 0){
+            // Increment cycles by 9 not 10: since we are incrementing the value later in the pipeline and account for adding a NOP
+            pipeline_cycles+=CACHE_MISS_DELAY - 1 - nop;
+        }
+
     }
     
     /* 4. Check for SW mem access and data miss .. add delay cycles if needed */
