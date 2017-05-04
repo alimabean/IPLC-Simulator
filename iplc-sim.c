@@ -411,8 +411,6 @@ void iplc_sim_push_pipeline_stage()
             if ((pipeline[ALU].stage.rtype.reg1 == pipeline[MEM].stage.lw.dest_reg) || (pipeline[ALU].stage.rtype.reg2_or_constant == pipeline[MEM].stage.lw.dest_reg))
             {
                 pipeline_cycles++;
-                memcpy( &pipeline[WRITEBACK], &pipeline[MEM], sizeof(pipeline_t) );
-                bzero( &(pipeline[MEM]), sizeof(pipeline_t) );
                 nop = 1;
 
                 if(pipeline[WRITEBACK].instruction_address)
